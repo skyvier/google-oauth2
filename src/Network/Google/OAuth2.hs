@@ -15,6 +15,7 @@ module Network.Google.OAuth2
     -- * Lower-level steps
     , newCreds
     , refreshCreds
+    , getPermissionUrl
     , promptForCode
     , exchangeCode
     ) where
@@ -153,7 +154,7 @@ promptForCode client scopes = do
     putStrLn ""
     putStrLn "Visit the following URL to retrieve a verification code:"
     putStrLn ""
-    putStrLn $ permissionUrl client scopes
+    putStrLn $ getPermissionUrl client scopes
     putStrLn ""
     putStr   "Verification code: "
     hFlush stdout
@@ -203,8 +204,8 @@ cachedValue tokenFile = do
 cacheValue :: Show a => FilePath -> a -> IO a
 cacheValue tokenFile x = fmap (const x) $ try $ writeFile tokenFile (show x)
 
-permissionUrl :: OAuth2Client -> [OAuth2Scope] -> String
-permissionUrl client scopes =
+getPermissionUrl :: OAuth2Client -> [OAuth2Scope] -> String
+getPermissionUrl client scopes =
     "https://accounts.google.com/o/oauth2/auth"
     <> "?response_type=code"
     <> "&client_id=" <> clientId client
