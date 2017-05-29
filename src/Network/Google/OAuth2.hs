@@ -67,7 +67,7 @@ data OAuth2Client = OAuth2Client
 
 data OAuth2Tokens = OAuth2Tokens
     { accessToken :: !OAuth2Token
-    , refreshToken :: !OAuth2Token
+    , refreshToken :: !(Maybe OAuth2Token)
     , expiresIn :: !Int
     , tokenType :: !String
     }
@@ -76,7 +76,7 @@ data OAuth2Tokens = OAuth2Tokens
 instance FromJSON OAuth2Tokens where
     parseJSON (Object o) = OAuth2Tokens
         <$> o .: "access_token"
-        <*> o .: "refresh_token"
+        <*> o .:? "refresh_token"
         <*> o .: "expires_in"
         <*> o .: "token_type"
 
@@ -98,11 +98,11 @@ instance FromJSON RefreshResponse where
 
     parseJSON _ = mzero
 
-toOAuth2Tokens :: OAuth2Token -> RefreshResponse -> OAuth2Tokens
-toOAuth2Tokens token RefreshResponse{..} =
+toOAuth2Tokens :: Maybe OAuth2Token -> RefreshResponse -> OAuth2Tokens
+toOAuth2Tokens mToken RefreshResponse{..} =
     OAuth2Tokens
         { accessToken = rAccessToken
-        , refreshToken = token
+        , refreshToken = mToken
         , expiresIn = rExpiresIn
         , tokenType = rTokenType
         }
@@ -179,18 +179,22 @@ customExchangeCode redirectUrl client code = postTokens
     , ("code", code)
     ]
 
--- | Use the refresh token to get a new access token
+-- | Use the refresh token to get a new access token.
+--
+-- XXX: Only if this has a refresh token.
 refreshCreds :: Credentials -> IO Credentials
-refreshCreds (Credentials client tokens) = do
-    refreshed <- postTokens
-        [ ("client_id", clientId client)
-        , ("client_secret", clientSecret client)
-        , ("grant_type", "refresh_token")
-        , ("refresh_token", refreshToken tokens)
-        ]
-
-    return $ Credentials client
-        $ toOAuth2Tokens (refreshToken tokens) refreshed
+refreshCreds creds@(Credentials client tokens) =
+    case refreshToken tokens of
+      Just refToken -> do
+         refreshed <- postTokens
+              [ ("client_id", clientId client)
+              , ("client_secret", clientSecret client)
+              , ("grant_type", "refresh_token")
+              , ("refresh_token", refToken)
+              ]
+         return $ Credentials client
+             $ toOAuth2Tokens (refreshToken tokens) refreshed
+      Nothing -> return creds
 
 postTokens :: FromJSON a => [(ByteString, String)] -> IO a
 postTokens params = do
