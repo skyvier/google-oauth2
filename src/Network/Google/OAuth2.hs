@@ -172,7 +172,7 @@ customExchangeCode redirectUrl client code = postTokens
     [ ("client_id", clientId client)
     , ("client_secret", clientSecret client)
     , ("grant_type", "authorization_code")
-    , ("redirect_uri", urlEncode redirectUrl)
+    , ("redirect_uri", redirectUrl)
     , ("code", code)
     ]
 
