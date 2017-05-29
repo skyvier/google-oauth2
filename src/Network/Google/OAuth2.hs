@@ -230,7 +230,6 @@ customPermissionUrl :: OAuth2Client
 customPermissionUrl client scopes redirectUrl state =
     "https://accounts.google.com/o/oauth2/auth"
     <> "?response_type=code"
-    <> "&access_type=offline"
     <> "&client_id=" <> clientId client
     <> "&redirect_uri=" <> urlEncode redirectUrl
     <> "&state=" <> urlEncode state
