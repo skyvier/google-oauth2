@@ -48,6 +48,9 @@ import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy as BL
 
+data ParseError = ParseError String deriving Show
+instance E.Exception ParseError
+
 type OAuth2Code = String
 type OAuth2Scope = String
 type OAuth2Token = String
@@ -196,7 +199,9 @@ postTokens params = do
     let params' = map (second C8.pack) params
 
     mngr <- newManager tlsManagerSettings
-    unsafeDecode <$> httpLbs (urlEncodedBody params' request) mngr
+    eDecoded <- eitherDecode . responseBody <$> httpLbs (urlEncodedBody params' request) mngr
+
+    either (E.throwIO . ParseError) return eDecoded
 
 cachedValue :: Read a => FilePath -> IO (Maybe a)
 cachedValue tokenFile = do
