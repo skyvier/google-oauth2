@@ -16,6 +16,7 @@ module Network.Google.OAuth2
     , newCreds
     , refreshCreds
     , getPermissionUrl
+    , customPermissionUrl
     , promptForCode
     , exchangeCode
     ) where
@@ -210,6 +211,19 @@ getPermissionUrl client scopes =
     <> "?response_type=code"
     <> "&client_id=" <> clientId client
     <> "&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
+    <> "&scope=" <> intercalate "+" (map urlEncode scopes)
+
+customPermissionUrl :: OAuth2Client
+                    -> [OAuth2Scope]
+                    -> String          -- ^ Redirect URL
+                    -> String          -- ^ State query parameter
+                    -> String
+customPermissionUrl client scopes redirectUrl state =
+    "https://accounts.google.com/o/oauth2/auth"
+    <> "?response_type=code"
+    <> "&client_id=" <> clientId client
+    <> "&redirect_uri=" <> urlEncode redirectUrl
+    <> "&state=" <> urlEncode state
     <> "&scope=" <> intercalate "+" (map urlEncode scopes)
 
 redirectUri :: String
