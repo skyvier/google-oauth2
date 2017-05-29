@@ -19,6 +19,7 @@ module Network.Google.OAuth2
     , customPermissionUrl
     , promptForCode
     , exchangeCode
+    , customExchangeCode
     ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -164,11 +165,14 @@ promptForCode client scopes = do
 
 -- | Exchange a verification code for tokens
 exchangeCode :: OAuth2Client -> OAuth2Code -> IO OAuth2Tokens
-exchangeCode client code = postTokens
+exchangeCode client code = customExchangeCode redirectUri client code
+
+customExchangeCode :: String -> OAuth2Client -> OAuth2Code -> IO OAuth2Tokens
+customExchangeCode redirectUrl client code = postTokens
     [ ("client_id", clientId client)
     , ("client_secret", clientSecret client)
     , ("grant_type", "authorization_code")
-    , ("redirect_uri", redirectUri)
+    , ("redirect_uri", redirectUrl)
     , ("code", code)
     ]
 
@@ -221,6 +225,7 @@ customPermissionUrl :: OAuth2Client
 customPermissionUrl client scopes redirectUrl state =
     "https://accounts.google.com/o/oauth2/auth"
     <> "?response_type=code"
+    <> "&access_type=offline"
     <> "&client_id=" <> clientId client
     <> "&redirect_uri=" <> urlEncode redirectUrl
     <> "&state=" <> urlEncode state
