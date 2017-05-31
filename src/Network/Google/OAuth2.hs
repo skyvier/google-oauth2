@@ -236,7 +236,7 @@ customPermissionUrl client scopes redirectUrl state =
     <> "?response_type=code"
     <> "&client_id=" <> clientId client
     <> "&redirect_uri=" <> urlEncode redirectUrl
-    <> "&state=" <> urlEncode state
+    <> (if state /= "" then "&state=" <> urlEncode state else "")
     <> "&scope=" <> intercalate "+" (map urlEncode scopes)
 
 redirectUri :: String
